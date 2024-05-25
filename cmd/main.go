@@ -4,34 +4,26 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"sort"
+
+	h "github.com/TobiasGleiter/go-gpt/internal/helper"
+	dc "github.com/TobiasGleiter/go-gpt/pkg/decoder"
+	ec "github.com/TobiasGleiter/go-gpt/pkg/encoder"
 )
 
 func main() {
-	content, err := ioutil.ReadFile("../data/tinyshakespeare/input.txt")
-	if err != nil {
-		log.Fatal(err)
-	}
+	helper := h.NewHelper()
+	
+	helper.LoadTextFile("../data/tinyshakespeare/input.txt")
+	helper.FindUniqueChars(text)
+	stoi, itos := helper.CreateMappings()
 
-	text := string(content)
-	fmt.Println("Length of dataset in characters:", len(text))
+	encoder := ec.NewEncoder()
+	decoder := dc.NewDecoder()
 
-	if len(text) > 0 { 
-		fmt.Println(text[:50])
-	}
+	testStr := "hii there"
+	encoded := encoder.Encode(testStr, stoi) // encoder: take a string, output a list of integers
+	fmt.Println(encoded)
+	decoded := decoder.Decode(encoded, itos) // decoder: take a list of integers, output a string
+	fmt.Println(decoded)
 
-	chars := make(map[rune]bool)
-	for _, char := range text {
-		chars[char] = true
-	}
-
-	var uniqueChars []rune
-    for char := range chars {
-        uniqueChars = append(uniqueChars, char)
-    }
-    sort.Slice(uniqueChars, func(i, j int) bool { return uniqueChars[i] < uniqueChars[j] })
-
-    // Print unique characters and vocabulary size
-    fmt.Println(string(uniqueChars))
-    fmt.Println(len(uniqueChars))
 }
