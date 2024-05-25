@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
-
+	
 	h "github.com/TobiasGleiter/go-gpt/internal/helper"
 	dc "github.com/TobiasGleiter/go-gpt/pkg/decoder"
 	ec "github.com/TobiasGleiter/go-gpt/pkg/encoder"
@@ -14,7 +12,7 @@ func main() {
 	helper := h.NewHelper()
 	
 	helper.LoadTextFile("../data/tinyshakespeare/input.txt")
-	helper.FindUniqueChars(text)
+	helper.FindUniqueChars()
 	stoi, itos := helper.CreateMappings()
 
 	encoder := ec.NewEncoder()

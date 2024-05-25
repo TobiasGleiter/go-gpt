@@ -1,12 +1,13 @@
 package helper
 
 import (
-	"fmt"
 	"sort"
+	"io/ioutil"
+	"log"
 )
 
 type Helper struct {
-	Chars []rune
+	UniqueChars []rune
 	Text string
 }
 
@@ -19,27 +20,27 @@ func (h *Helper) LoadTextFile(path string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	h.Text := string(content)
+	h.Text = string(content)
+}
+
+func (h *Helper) FindUniqueChars() {
+	chars := make(map[rune]bool)
+	for _, char := range h.Text {
+		chars[char] = true
+	}
+
+    for char := range chars {
+        h.UniqueChars = append(h.UniqueChars, char)
+    }
+    sort.Slice(h.UniqueChars, func(i, j int) bool { return h.UniqueChars[i] < h.UniqueChars[j] })
 }
 
 func (h *Helper) CreateMappings() (map[rune]int, map[int]rune) {
 	stoi := make(map[rune]int)
 	itos := make(map[int]rune)
-	for i, ch := range h.Chars {
+	for i, ch := range h.UniqueChars {
 		stoi[ch] = i
 		itos[i] = ch
 	}
 	return stoi, itos
-}
-
-func (h *Helper) FindUniqueChars(text string) {
-	chars := make(map[rune]bool)
-	for _, char := range text {
-		chars[char] = true
-	}
-
-    for char := range chars {
-        h.Chars = append(h.Chars, char)
-    }
-    sort.Slice(h.Chars, func(i, j int) bool { return h.Chars[i] < h.Chars[j] })
 }
