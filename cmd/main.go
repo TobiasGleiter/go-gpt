@@ -32,47 +32,19 @@ func main() {
 	trainingsData := fullTextEncoded[:n] // first 90 % will be train, rest validation
 	//validationData := fullTextEncoded[n:]
 
-	blockSize := 8 // or context-length
-
-	// Prediction of the next "token"
-	// The transformer sees all combinations from one to blockSize (more than blockSize could not be predicted)
-	x := trainingsData[:blockSize]
-	y := trainingsData[1:blockSize+1] // 8 individual numbers, thats why blocksize+1 (18, 45 => 56)
-	for t := 0; t < blockSize; t++ {
-		context := x[:t+1]
-		target := y[t]
-		fmt.Printf("When input is %v the target: %d\n", context, target)
-	}
-
-	batchSize := 4 // how many independent sequences will we process in parallel
-	blockSize = 8
 	
+	batchSize := 4 // how many independent sequences will we process in parallel
+	blockSize := 8 // or also known as context-length
+	
+	//helper.ShowSimpleTokenPrediction(trainingsData, blockSize) // Show simple token prediction (token = number)
+
 	tensor := t.NewTensor()
 
 	xb := tensor.GetBatch(trainingsData, blockSize, batchSize)
 	yb := tensor.GetBatch(trainingsData, blockSize, batchSize)
 
-	fmt.Println("inputs:")
-	fmt.Println(xb.Shape)
-	for _, row := range xb.Data[:batchSize] {
-		fmt.Println(row)
-	}
+	//helper.ShowBatches(xb, yb, batchSize) // Shows the batches for parallel processing where xb predicts yb
+	//helper.ShowBatchesTokenPrediction(xb, yb, batchSize, blockSize)
 
-	fmt.Println("targets:")
-	fmt.Println(yb.Shape)
-	for _, row := range yb.Data[:batchSize] {
-		fmt.Println(row)
-	}
-
-	fmt.Println("----")
-
-	for b := 0; b < batchSize; b++ { // batch dimension
-		for t := 0; t < blockSize; t++ { // time dimension
-			context := xb.Data[b][:t+1]
-			target := yb.Data[b][t]
-			fmt.Printf("when input is %v the target: %d\n", context, target)
-		}
-	}
-
-	print(xb)
+	fmt.Println(xb.Data) // input to the transformer
 }
