@@ -19,5 +19,5 @@ func NewTensor(shape []int, data []int) *Tensor {
 func (t *Tensor) Info() {
 	fmt.Println("Shape:", t.Shape)
 	fmt.Println("Data Type: int")
-	fmt.Println("Data:", t.Data[:1000])
+	fmt.Println("Data:", t.Data[:200])
 }

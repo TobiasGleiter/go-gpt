@@ -31,4 +31,22 @@ func main() {
 
 	dataTensor.Info()
 
+	
+	n := int(0.9 * float64(len(fullTextEncoded)))
+	trainingData := fullTextEncoded[:n] // first 90 % will be train, rest validation
+	//validationData := fullTextEncoded[n:]
+
+	blockSize := 8 // or context-length
+
+	// Prediction of the next "token"
+	// The transformer sees all combinations from one to blockSize (more than blockSize could not be predicted)
+	x := trainingData[:blockSize]
+	y := trainingData[1:blockSize+1] // 8 individual numbers, thats why blocksize+1
+	for t := 0; t < blockSize; t++ {
+		context := x[:t+1]
+		target := y[t]
+		fmt.Printf("When input is %v the target: %d\n", context, target)
+	}
+
+	
 }
