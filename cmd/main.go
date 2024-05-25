@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"math"
 
 	h "github.com/TobiasGleiter/go-gpt/internal/helper"
 	dc "github.com/TobiasGleiter/go-gpt/pkg/decoder"
 	ec "github.com/TobiasGleiter/go-gpt/pkg/encoder"
 	t "github.com/TobiasGleiter/go-gpt/pkg/tensor"
 	bi "github.com/TobiasGleiter/go-gpt/pkg/neuralnetwork/bigram"
+	"github.com/TobiasGleiter/go-gpt/pkg/neuralnetwork/optimizer"
 )
 
 func main() {
@@ -41,22 +43,58 @@ func main() {
 
 	tensor := t.NewTensor()
 
-	xb := tensor.GetBatch(trainingsData, blockSize, batchSize)
-	yb := tensor.GetBatch(trainingsData, blockSize, batchSize)
+	xbTensor, ybTensor := tensor.GetBatch(trainingsData, blockSize, batchSize)
+	xb := tensor.TensorToSlice(xbTensor)
+	yb := tensor.TensorToSlice(ybTensor)
 
-	//helper.ShowBatches(xb, yb, batchSize) // Shows the batches for parallel processing where xb predicts yb
-	//helper.ShowBatchesTokenPrediction(xb, yb, batchSize, blockSize)
+	// helper.ShowBatches(xbTensor, ybTensor, batchSize) // Shows the batches for parallel processing where xb predicts yb
+	// helper.ShowBatchesTokenPrediction(xbTensor, ybTensor, batchSize, blockSize)
 
-	fmt.Println(xb.Data) // input to the transformer
-	fmt.Println(yb.Data)
+	fmt.Println(xbTensor.Data)
+	fmt.Println(ybTensor.Data)
 
 	vocSize := len(helper.UniqueChars)
 	model := bi.NewBigramLanguageModel(vocSize)
 
-	// logits, loss := model.Forward(xb.Data[0], yb.Data[0])
+
+	_, loss := model.Forward(xb, yb)
 	// fmt.Println("Logits:", logits) // Logits represent ???
-	// fmt.Println("Loss:", loss) // Higher number should be better? -ln(1/65) circa 4.1 should be the loss.
+	fmt.Println("Loss:", loss) // Higher number should be better?
 
 	generated := model.Generate([]int{0}, 100)
-	fmt.Println("Generated sequence:", decoder.Decode(generated, itos))
+	fmt.Println("Generated sequence:", decoder.Decode(generated, itos)) // This generates garbage :D
+
+	var parameters []*bi.Parameter
+	for _, row := range model.TokenEmbeddingTable {
+		for _, param := range row {
+			parameters = append(parameters, param)
+		}
+	}
+
+	fmt.Println("Parameters:", len(parameters))
+
+
+	optimizer := optimizer.NewSGD(parameters, 1e-5)
+
+	batchSize = 32
+	for epoch := 0; epoch < 1000; epoch++ {
+		xbTensor, ybTensor := tensor.GetBatch(trainingsData, blockSize, batchSize)
+		xb := tensor.TensorToSlice(xbTensor)
+		yb := tensor.TensorToSlice(ybTensor)
+
+		logits, loss := model.Forward(xb, yb)
+
+		if math.IsNaN(loss) {
+			fmt.Printf("NaN encountered at epoch %d\n", epoch)
+			break
+		}
+		fmt.Printf("Epoch %d, Loss: %f\n", epoch, loss)
+
+		model.Backward(xb, yb, logits)
+		optimizer.Step()
+		optimizer.ZeroGradients()
+	}
+
+	generated = model.Generate([]int{0}, 100)
+	fmt.Println("Generated sequence:", decoder.Decode(generated, itos)) // This generates garbage :D
 }

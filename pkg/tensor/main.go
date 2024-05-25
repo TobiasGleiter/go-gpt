@@ -20,7 +20,7 @@ func (t *Tensor) Info() {
 	fmt.Println("Data:", t.Data[:200])
 }
 
-func (t *Tensor) GetBatch(data []int, blockSize, batchSize int) Tensor {
+func (t *Tensor) GetBatch(data []int, blockSize, batchSize int) (Tensor, Tensor) {
 	x := make([][]int, batchSize)
 	y := make([][]int, batchSize)
 
@@ -31,7 +31,24 @@ func (t *Tensor) GetBatch(data []int, blockSize, batchSize int) Tensor {
 	}
 
 	return Tensor{
-		Data:  append(x, y...),
-		Shape: [2]int{batchSize, blockSize},
+			Data:  x,
+			Shape: [2]int{batchSize, blockSize},
+		}, Tensor{
+			Data:  y,
+			Shape: [2]int{batchSize, blockSize},
+		}
+}
+
+func (t *Tensor) TensorToSlice(tensor Tensor) [][]int {
+	data := tensor.Data
+	batchSize := len(data)
+	seqLen := len(data[0])
+	result := make([][]int, batchSize)
+	for i := 0; i < batchSize; i++ {
+		result[i] = make([]int, seqLen)
+		for j := 0; j < seqLen; j++ {
+			result[i][j] = data[i][j]
+		}
 	}
+	return result
 }

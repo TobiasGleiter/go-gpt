@@ -5,64 +5,89 @@ import (
 	"math/rand"
 )
 
+type Parameter struct {
+	Value   float64
+	Grad    float64
+}
+
 type BigramLanguageModel struct {
-	tokenEmbeddingTable [][]float64
-	vocabSize           int
+	TokenEmbeddingTable [][]*Parameter
+	VocabSize           int
 }
 
 func NewBigramLanguageModel(vocabSize int) *BigramLanguageModel {
-	// Random weights in the language model
-	// Table of the size vocabSize * vocabSize
-	embedding := make([][]float64, vocabSize)
-	for i := range embedding {
-		embedding[i] = make([]float64, vocabSize)
-		for j := range embedding[i] {
-			embedding[i][j] = rand.Float64()
+	table := make([][]*Parameter, vocabSize)
+	for i := range table {
+		table[i] = make([]*Parameter, vocabSize)
+		for j := range table[i] {
+			table[i][j] = &Parameter{Value: rand.Float64()}
 		}
 	}
 	return &BigramLanguageModel{
-		tokenEmbeddingTable: embedding,
-		vocabSize:           vocabSize,
+		TokenEmbeddingTable: table,
+		VocabSize:           vocabSize,
 	}
 }
 
 // idx gets the row with the given index in the language model (tokenEmbeddingTable)
-func (m *BigramLanguageModel) Forward(idx []int, targets []int) ([][]float64, float64) {
-	// Currently this does not use the T (Time)
-	B := len(idx)
-	logits := make([][]float64, B) // (B, T, C) e.g. BatchSize (4), Time (8), Channel (65 voc size) 
+func (m *BigramLanguageModel) Forward(idx [][]int, targets [][]int) ([][][]float64, float64) {
+	B := len(idx) // Batch size
+	T := len(idx[0]) // Sequence length (time dimension)
+	logits := make([][][]float64, B) // (B, T, C)
 	for i := range logits {
-		logits[i] = make([]float64, m.vocabSize) 
-		for j := range logits[i] {
-			logits[i][j] = m.tokenEmbeddingTable[idx[i]][j] 
+		logits[i] = make([][]float64, T)
+		for t := range logits[i] {
+			logits[i][t] = make([]float64, m.VocabSize)
+			for j := range logits[i][t] {
+				logits[i][t][j] = m.TokenEmbeddingTable[idx[i][t]][j].Value
+			}
 		}
 	}
 
-	// Calculate loss (how good the prediction is)
+	// Calculate Cross-Entropy Loss
 	var loss float64
 	if targets != nil {
 		for i := 0; i < B; i++ {
-			for j := 0; j < m.vocabSize; j++ {
-				if j == targets[i] {
-					loss -= math.Log(logits[i][j])
-				}
+			for t := 0; t < T; t++ {
+				target := targets[i][t]
+				loss -= math.Log(logits[i][t][target])
 			}
 		}
-		loss /= float64(B)
+		loss /= float64(B * T)
 	}
 
 	return logits, loss
 }
 
+func (m *BigramLanguageModel) Backward(idx [][]int, targets [][]int, logits [][][]float64) {
+	B := len(idx) // Batch size
+	T := len(idx[0]) // Sequence length (time dimension)
+	for i := 0; i < B; i++ {
+		for t := 0; t < T; t++ {
+			target := targets[i][t]
+			for j := 0; j < m.VocabSize; j++ {
+				grad := logits[i][t][j]
+				if j == target {
+					grad -= 1
+				}
+				m.TokenEmbeddingTable[idx[i][t]][j].Grad += grad
+			}
+		}
+	}
+}
+
 func (m *BigramLanguageModel) Generate(idx []int, maxNewTokens int) []int {
 	for i := 0; i < maxNewTokens; i++ {
-		logits, _ := m.Forward(idx, nil)
-		lastLogits := logits[len(logits)-1]
+		batch := [][]int{idx}
+		logits, _ := m.Forward(batch, nil) // Don't use loss
+		lastLogits := logits[0][len(idx)-1]
 		nextIdx := sampleFromDistribution(lastLogits)
 		idx = append(idx, nextIdx)
 	}
 	return idx
 }
+
+
 
 func sampleFromDistribution(probs []float64) int {
 	total := 0.0
