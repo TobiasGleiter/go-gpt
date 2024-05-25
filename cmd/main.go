@@ -7,6 +7,7 @@ import (
 	dc "github.com/TobiasGleiter/go-gpt/pkg/decoder"
 	ec "github.com/TobiasGleiter/go-gpt/pkg/encoder"
 	t "github.com/TobiasGleiter/go-gpt/pkg/tensor"
+	bi "github.com/TobiasGleiter/go-gpt/pkg/neuralnetwork/bigram"
 )
 
 func main() {
@@ -47,4 +48,15 @@ func main() {
 	//helper.ShowBatchesTokenPrediction(xb, yb, batchSize, blockSize)
 
 	fmt.Println(xb.Data) // input to the transformer
+	fmt.Println(yb.Data)
+
+	vocSize := len(helper.UniqueChars)
+	model := bi.NewBigramLanguageModel(vocSize)
+
+	// logits, loss := model.Forward(xb.Data[0], yb.Data[0])
+	// fmt.Println("Logits:", logits) // Logits represent ???
+	// fmt.Println("Loss:", loss) // Higher number should be better?
+
+	generated := model.Generate([]int{0}, 100)
+	fmt.Println("Generated sequence:", decoder.Decode(generated, itos))
 }
