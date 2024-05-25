@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 
 	h "github.com/TobiasGleiter/go-gpt/internal/helper"
 	dc "github.com/TobiasGleiter/go-gpt/pkg/decoder"
@@ -27,9 +28,9 @@ func main() {
 
 
 	fullTextEncoded := encoder.Encode(helper.Text, stoi)
-	dataTensor := t.NewTensor([]int{len(fullTextEncoded)}, fullTextEncoded)
+	// dataTensor := t.NewTensor([]int{len(fullTextEncoded), 1}, fullTextEncoded)
 
-	dataTensor.Info()
+	// dataTensor.Info()
 
 	
 	n := int(0.9 * float64(len(fullTextEncoded)))
@@ -48,5 +49,47 @@ func main() {
 		fmt.Printf("When input is %v the target: %d\n", context, target)
 	}
 
+	batchSize := 4
+	blockSize = 8
 	
+	xb := getBatch("train", trainingData, blockSize, batchSize)
+	yb := getBatch("train", trainingData, blockSize, batchSize)
+
+	fmt.Println("inputs:")
+	fmt.Println(xb.Shape)
+	for _, row := range xb.Data[:batchSize] {
+		fmt.Println(row)
+	}
+
+	fmt.Println("targets:")
+	fmt.Println(yb.Shape)
+	for _, row := range yb.Data[:batchSize] {
+		fmt.Println(row)
+	}
+
+	fmt.Println("----")
+
+	for b := 0; b < batchSize; b++ { // batch dimension
+		for t := 0; t < blockSize; t++ { // time dimension
+			context := xb.Data[b][:t+1]
+			target := yb.Data[b][t]
+			fmt.Printf("when input is %v the target: %d\n", context, target)
+		}
+	}
+}
+
+func getBatch(split string, data []int, blockSize, batchSize int) t.Tensor {
+	x := make([][]int, batchSize)
+	y := make([][]int, batchSize)
+
+	for i := 0; i < batchSize; i++ {
+		ix := rand.Intn(len(data) - blockSize)
+		x[i] = data[ix : ix+blockSize]
+		y[i] = data[ix+1 : ix+blockSize+1]
+	}
+
+	return t.Tensor{
+		Data:  append(x, y...),
+		Shape: [2]int{batchSize, blockSize},
+	}
 }
