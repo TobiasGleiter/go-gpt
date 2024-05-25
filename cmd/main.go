@@ -55,7 +55,7 @@ func main() {
 
 	// logits, loss := model.Forward(xb.Data[0], yb.Data[0])
 	// fmt.Println("Logits:", logits) // Logits represent ???
-	// fmt.Println("Loss:", loss) // Higher number should be better?
+	// fmt.Println("Loss:", loss) // Higher number should be better? -ln(1/65) circa 4.1 should be the loss.
 
 	generated := model.Generate([]int{0}, 100)
 	fmt.Println("Generated sequence:", decoder.Decode(generated, itos))
