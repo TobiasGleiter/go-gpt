@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	
+
 	h "github.com/TobiasGleiter/go-gpt/internal/helper"
 	dc "github.com/TobiasGleiter/go-gpt/pkg/decoder"
 	ec "github.com/TobiasGleiter/go-gpt/pkg/encoder"
+	t "github.com/TobiasGleiter/go-gpt/pkg/tensor"
 )
 
 func main() {
@@ -23,5 +24,11 @@ func main() {
 	fmt.Println(encoded)
 	decoded := decoder.Decode(encoded, itos) // decoder: take a list of integers, output a string
 	fmt.Println(decoded)
+
+
+	fullTextEncoded := encoder.Encode(helper.Text, stoi)
+	dataTensor := t.NewTensor([]int{len(fullTextEncoded)}, fullTextEncoded)
+
+	dataTensor.Info()
 
 }
