@@ -7,7 +7,7 @@ Let's have a look how far I could come...
 
 - [x] Reading and exploring the data
 - [x] Tokenization, train/val split
-- [ ] Data loader: batches of chunks of data
+- [x] Data loader: batches of chunks of data
 - [ ] Simplest baseline: bigram language model, loss, generation
 - [ ] Train the bigram model
 - [ ] Port our code to a script

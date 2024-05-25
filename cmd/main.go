@@ -73,4 +73,6 @@ func main() {
 			fmt.Printf("when input is %v the target: %d\n", context, target)
 		}
 	}
+
+	print(xb)
 }
