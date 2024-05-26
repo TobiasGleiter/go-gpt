@@ -10,8 +10,7 @@ Let's have a look how far I could come...
 - [x] Data loader: batches of chunks of data
 - [x] Simplest baseline: bigram language model, loss, generation
 - [x] Train the bigram model (not sure if the model is correctly trained)
-- [ ] Port our code to a script
-- [ ] Version 1: Averaging past context with for loope, the weakes form of...
+- [ ] Version 1: Averaging past context with for loop, the weakes form of...
 - [ ] The trick in self-attention: matrix multiply as weighted aggregation
 - [ ] Version 2: Using matrix multiply
 - [ ] Version 3: Adding softmax
