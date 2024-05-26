@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"math/rand"
 
 	h "github.com/TobiasGleiter/go-gpt/internal/helper"
 	dc "github.com/TobiasGleiter/go-gpt/pkg/decoder"
@@ -13,6 +14,8 @@ import (
 )
 
 func main() {
+	rand.Seed(1337)
+
 	helper := h.NewHelper()
 	
 	helper.LoadTextFile("../data/tinyshakespeare/input.txt")
@@ -74,10 +77,10 @@ func main() {
 	fmt.Println("Parameters:", len(parameters))
 
 
-	optimizer := optimizer.NewSGD(parameters, 1e-5)
+	optimizer := optimizer.NewSGD(parameters, 1e-3)
 
 	batchSize = 32
-	for epoch := 0; epoch < 1000; epoch++ {
+	for epoch := 0; epoch < 100; epoch++ {
 		xbTensor, ybTensor := tensor.GetBatch(trainingsData, blockSize, batchSize)
 		xb := tensor.TensorToSlice(xbTensor)
 		yb := tensor.TensorToSlice(ybTensor)

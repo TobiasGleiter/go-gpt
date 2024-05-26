@@ -44,6 +44,13 @@ func (m *BigramLanguageModel) Forward(idx [][]int, targets [][]int) ([][][]float
 		}
 	}
 
+	// Apply softmax to logits
+	for i := 0; i < B; i++ {
+		for t := 0; t < T; t++ {
+			logits[i][t] = softmax(logits[i][t])
+		}
+	}
+
 	// Calculate Cross-Entropy Loss
 	var loss float64
 	if targets != nil {
@@ -70,7 +77,7 @@ func (m *BigramLanguageModel) Backward(idx [][]int, targets [][]int, logits [][]
 				if j == target {
 					grad -= 1
 				}
-				m.TokenEmbeddingTable[idx[i][t]][j].Grad += grad
+				m.TokenEmbeddingTable[idx[i][t]][j].Grad += grad / float64(B * T)
 			}
 		}
 	}
@@ -87,8 +94,6 @@ func (m *BigramLanguageModel) Generate(idx []int, maxNewTokens int) []int {
 	return idx
 }
 
-
-
 func sampleFromDistribution(probs []float64) int {
 	total := 0.0
 	for _, prob := range probs {
@@ -102,4 +107,25 @@ func sampleFromDistribution(probs []float64) int {
 		}
 	}
 	return len(probs) - 1
+}
+
+func softmax(logits []float64) []float64 {
+	maxLogit := math.Inf(-1)
+	for _, logit := range logits {
+		if logit > maxLogit {
+			maxLogit = logit
+		}
+	}
+
+	var sumExp float64
+	for i := range logits {
+		logits[i] = math.Exp(logits[i] - maxLogit)
+		sumExp += logits[i]
+	}
+
+	for i := range logits {
+		logits[i] /= sumExp
+	}
+
+	return logits
 }
