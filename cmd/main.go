@@ -100,4 +100,62 @@ func main() {
 
 	generated = model.Generate([]int{0}, 100)
 	fmt.Println("Generated sequence:", decoder.Decode(generated, itos)) // This generates garbage :D
+
+
+	// Version 1: Averaging past context with for loop, the weakes form of...
+	B := 2 // Number of batches
+	T := 4 // Sequence length
+	C := 3 // Embedding dimension
+
+	// Example input tensor x of shape (B, T, C)
+	x := [][][]float64{
+		{
+			{1.0, 2.0, 3.0},
+			{4.0, 5.0, 6.0},
+			{7.0, 8.0, 9.0},
+			{10.0, 11.0, 12.0},
+		},
+		{
+			{13.0, 14.0, 15.0},
+			{16.0, 17.0, 18.0},
+			{19.0, 20.0, 21.0},
+			{22.0, 23.0, 24.0},
+		},
+	}
+
+	// Initialize the output tensor xbow with shape (B, T, C)
+	xbow := make([][][]float64, B)
+	for b := range xbow {
+		xbow[b] = make([][]float64, T)
+		for t := range xbow[b] {
+			xbow[b][t] = make([]float64, C)
+		}
+	}
+
+	// Compute the mean of all previous tokens up to the current token
+	for b := 0; b < B; b++ {
+		for t := 0; t < T; t++ {
+			sum := make([]float64, C)
+			count := float64(t + 1) // Number of elements to include in the mean
+			for i := 0; i <= t; i++ {
+				for j := 0; j < C; j++ {
+					sum[j] += x[b][i][j]
+				}
+			}
+			for j := 0; j < C; j++ {
+				xbow[b][t][j] = sum[j] / count
+			}
+		}
+	}
+
+	fmt.Println(x[0])
+	fmt.Println(xbow[0])
+
+	// Print the output tensor xbow
+	for b := range xbow {
+		fmt.Printf("Batch %d:\n", b)
+		for t := range xbow[b] {
+			fmt.Printf("Timestep %d: %v\n", t, xbow[b][t])
+		}
+	}
 }
